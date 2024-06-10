@@ -9,7 +9,7 @@ public class MusicLibraryPlugin
     public static string GetRecentPlays()
     {
         string dir = Directory.GetCurrentDirectory();
-        string content = File.ReadAllText($"{dir}/recentlyplayed.txt");
+        string content = File.ReadAllText($"{dir}/data/recentlyplayed.txt");
         return content;
     }
 
@@ -17,7 +17,7 @@ public class MusicLibraryPlugin
     public static string GetMusicLibrary()
     {
         string dir = Directory.GetCurrentDirectory();
-        string content = File.ReadAllText($"{dir}/musiclibrary.txt");
+        string content = File.ReadAllText($"{dir}/data/musiclibrary.txt");
         return content;
     }
 
@@ -28,7 +28,7 @@ public class MusicLibraryPlugin
         [Description("The song genre")] string genre)
     {
         // Read the existing content from the file
-        string filePath = "recentlyplayed.txt";
+        string filePath = "data/recentlyplayed.txt";
         string jsonContent = File.ReadAllText(filePath);
 
         #pragma warning disable CS8600 

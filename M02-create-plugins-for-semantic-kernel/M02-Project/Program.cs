@@ -1,18 +1,19 @@
-﻿using Microsoft.SemanticKernel;
+﻿#pragma warning disable SKEXP0050 
+using Microsoft.SemanticKernel;
 
 string yourDeploymentName = "";
 string yourEndpoint = "";
-string yourKey = "";
+string yourApiKey = "";
 
 var builder = Kernel.CreateBuilder();
-builder.Services.AddAzureOpenAIChatCompletion(
+builder.AddAzureOpenAIChatCompletion(
     yourDeploymentName,
     yourEndpoint,
-    yourKey,
+    yourApiKey,
     "gpt-35-turbo-16k");
 
 var kernel = builder.Build();
 var result = await kernel.InvokePromptAsync(
     "Give me a list of breakfast foods with eggs and cheese");
-    
+
 Console.WriteLine(result);
