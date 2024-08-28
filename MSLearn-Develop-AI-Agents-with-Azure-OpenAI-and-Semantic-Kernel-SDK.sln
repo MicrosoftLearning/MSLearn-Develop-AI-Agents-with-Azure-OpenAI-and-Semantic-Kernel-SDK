@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "M02-create-plugins-for-semantic-kernel", "M02-create-plugins-for-semantic-kernel", "{B87147B4-79CB-451B-9599-8167209A8826}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M02-Project", "M02-create-plugins-for-semantic-kernel\M02-Project\M02-Project.csproj", "{63D9E15F-AD7B-4B07-BE46-35B3A9D3101B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M03-Project", "M03-give-your-ai-agent-skills\M03-Project\M03-Project.csproj", "{BF372B36-B81C-43BF-8526-1F84686DDF63}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M04-Project", "M04-combine-prompts-and-functions\M04-Project\M04-Project.csproj", "{CD254420-241B-42C8-9278-34ABE62DABD5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M05-Project", "M05-use-intelligent-planners\M05-Project\M05-Project.csproj", "{0CC5B437-39C5-42B2-90AD-FD3D7059E0A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,12 +21,21 @@ Global
 		{63D9E15F-AD7B-4B07-BE46-35B3A9D3101B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63D9E15F-AD7B-4B07-BE46-35B3A9D3101B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63D9E15F-AD7B-4B07-BE46-35B3A9D3101B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF372B36-B81C-43BF-8526-1F84686DDF63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF372B36-B81C-43BF-8526-1F84686DDF63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF372B36-B81C-43BF-8526-1F84686DDF63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF372B36-B81C-43BF-8526-1F84686DDF63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD254420-241B-42C8-9278-34ABE62DABD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD254420-241B-42C8-9278-34ABE62DABD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD254420-241B-42C8-9278-34ABE62DABD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD254420-241B-42C8-9278-34ABE62DABD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CC5B437-39C5-42B2-90AD-FD3D7059E0A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CC5B437-39C5-42B2-90AD-FD3D7059E0A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CC5B437-39C5-42B2-90AD-FD3D7059E0A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CC5B437-39C5-42B2-90AD-FD3D7059E0A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{63D9E15F-AD7B-4B07-BE46-35B3A9D3101B} = {B87147B4-79CB-451B-9599-8167209A8826}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4CBB0488-497A-40CD-984E-A4BD57CF3A29}
