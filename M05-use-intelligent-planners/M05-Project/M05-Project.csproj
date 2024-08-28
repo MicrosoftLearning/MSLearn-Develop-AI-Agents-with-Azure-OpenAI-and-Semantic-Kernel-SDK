@@ -13,6 +13,8 @@
     <None Remove="data\concertdates.txt" />
     <None Remove="data\musiclibrary.txt" />
     <None Remove="data\recentlyplayed.txt" />
+    <None Remove="Prompts\SuggestConcert\config.json" />
+    <None Remove="Prompts\SuggestConcert\skprompt.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +25,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="data\recentlyplayed.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prompts\SuggestConcert\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prompts\SuggestConcert\skprompt.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

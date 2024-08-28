@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+#pragma warning disable SKEXP0060
 
 var config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", optional: true)
@@ -18,17 +20,28 @@ builder.AddAzureOpenAIChatCompletion(
     yourApiKey,
     "gpt-35-turbo-16k");
 var kernel = builder.Build();
-
 kernel.ImportPluginFromType<MusicLibraryPlugin>();
+kernel.ImportPluginFromType<MusicConcertPlugin>();
+kernel.ImportPluginFromPromptDirectory("Prompts");
 
-string prompt = @"This is a list of music available to the user:
-    {{MusicLibraryPlugin.GetMusicLibrary}} 
+OpenAIPromptExecutionSettings settings = new()
+{
+    ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+};
 
-    This is a list of music the user has recently played:
-    {{MusicLibraryPlugin.GetRecentPlays}}
+var songSuggesterFunction = kernel.CreateFunctionFromPrompt(
+    promptTemplate: @"Based on the user's recently played music:
+        {{$recentlyPlayedSongs}}
+        recommend a song to the user from the music library:
+        {{$musicLibrary}}",
+    functionName: "SuggestSong",
+    description: "Recommend a song from the library"
+);
 
-    Based on their recently played music, suggest a song from
-    the list to play next";
+kernel.Plugins.AddFromFunctions("SuggestSong", [songSuggesterFunction]);
 
-var result = await kernel.InvokePromptAsync(prompt);
-Console.WriteLine(result);
+string prompt = @"Add this song to the recently played songs list:  title: 'Touch', artist: 'Cat's Eye', genre: 'Pop'";
+
+    var result = await kernel.InvokePromptAsync(prompt, new(settings));
+
+    Console.WriteLine(result);
