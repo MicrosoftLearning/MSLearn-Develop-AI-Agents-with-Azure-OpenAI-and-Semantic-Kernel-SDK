@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Danse",
+    "artist": "Tiara",
+    "genre": "French pop, electropop, pop"
+  },
+  {
+    "title": "하늘바라기",
+    "artist": "정은지",
+    "genre": "k-pop"
+  },
+  {
+    "title": "Amateur",
+    "artist": "이승철",
+    "genre": "k-pop"
+  },
+  {
+    "title": "Adventure",
+    "artist": "Alexander Nakarada",
+    "genre": "new-age"
+  },
+  {
+    "title": "Zoltraak",
+    "artist": "Evan Call",
+    "genre": "new-age"
+  }
+]

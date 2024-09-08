@@ -1,0 +1,16 @@
+{
+  "todoList": [
+    {
+      "task": "코드 예제 완성하기",
+      "completed": true
+    },
+    {
+      "task": "영어 연습",
+      "completed": false
+    },
+    {
+      "task": "저녁반찬 구매",
+      "completed": false
+    }
+  ]
+}

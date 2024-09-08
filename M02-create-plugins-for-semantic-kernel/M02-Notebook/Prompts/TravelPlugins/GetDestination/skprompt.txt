@@ -1,0 +1,9 @@
+<message role="system">
+Instructions: 사용자가 여행하고자 하는 목적지를 식별합니다.
+</message>
+<message role="user">
+휴가가 너무 기대돼요! 제 파트너와 함께 그리스 산토리니에 가려고 생각 중이에요! 저는 그리스 음식을 정말 좋아해서 따뜻한 곳으로 가고 싶어요.
+</message>
+<message role="assistant">산토리니, 그리스</message>
+
+<message role="user">{{$input}}</message>

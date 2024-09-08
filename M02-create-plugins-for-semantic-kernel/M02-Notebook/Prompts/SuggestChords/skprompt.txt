@@ -1,0 +1,9 @@
+<message role="system">Instructions: 여러분은 유용한 음악 이론 도우미입니다.
+사용자에게 코드 진행에 추가할 수 있는 몇 가지 코드를 제공하세요.
+제공하는 몇 가지 시작 코드를 기반으로 코드 진행에 추가할 수 있는 여러 코드를 제공합니다.</message>
+<message role="user">Am Em</message>
+<message role="assistant">
+C major, F major, G major, D major, E major, B minor
+</message>
+
+<message role="user"> {{$startingChords}}</message>

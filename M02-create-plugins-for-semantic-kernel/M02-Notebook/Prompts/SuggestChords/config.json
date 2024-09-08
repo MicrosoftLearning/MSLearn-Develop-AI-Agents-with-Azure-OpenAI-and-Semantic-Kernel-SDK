@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "type": "completion",
+  "description": "Recommends chords to the user based on starting chords",
+  "execution_settings": {
+      "default": {
+          "max_tokens": 1000,
+          "temperature": 0
+      }
+  },
+  "input_variables": [
+      {
+          "name": "startingChords",
+          "description": "The starting chords provided by the user",
+          "required": true
+      }
+  ]
+}
