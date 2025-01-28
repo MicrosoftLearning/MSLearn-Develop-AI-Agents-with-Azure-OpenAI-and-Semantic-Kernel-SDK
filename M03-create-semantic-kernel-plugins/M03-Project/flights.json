@@ -1,0 +1,26 @@
+[
+  {
+    "Id": 1,
+    "Airline": "Air Japan",
+    "Destination": "Tokyo",
+    "DepartureDate": "2025-01-19",
+    "Price": 1200,
+    "IsBooked": true
+  },
+  {
+    "Id": 2,
+    "Airline": "Pacific Airlines",
+    "Destination": "Tokyo",
+    "DepartureDate": "2025-01-25",
+    "Price": 1100,
+    "IsBooked": false
+  },
+  {
+    "Id": 3,
+    "Airline": "Skyward Express",
+    "Destination": "Tokyo",
+    "DepartureDate": "2025-01-20",
+    "Price": 1150,
+    "IsBooked": false
+  }
+]
