@@ -44,50 +44,17 @@ var searchClient = new SearchClient(
 // Create a chat history object
 ChatHistory chatHistory = [];
 
+// After building the kernel, register the RAG plugin
+var ragPlugin = new RAGPlugin(searchEndpoint, searchApiKey, indexName);
+kernel.ImportPluginFromObject(ragPlugin, "RAG");
+
 // Function to perform RAG search and augment the prompt
 async Task<string> RetrieveAndAugmentAsync(string userQuery)
 {
-    // 1. Retrieve relevant documents from Azure AI Search
-    var searchOptions = new SearchOptions
-    {
-        Size = 3 // Get top 3 results
-    };
-
-    searchOptions.Select.Add("content");
-    searchOptions.Select.Add("title");
-
-    var searchResults = await searchClient.SearchAsync<SearchDocument>(userQuery, searchOptions);
-    
-    // 2. Format the retrieved content to augment the prompt
-    var contextBuilder = new StringBuilder();
-    contextBuilder.AppendLine("Here is some relevant information that might help answer the query:");
-    
-    var results = searchResults.Value.GetResults();
-    foreach (var result in results)
-    {
-        var document = result.Document;
-        string title = "";
-        string content = "";
-        
-        if (document.TryGetValue("title", out object? titleObj))
-        {
-            title = titleObj?.ToString() ?? "";
-        }
-        
-        if (document.TryGetValue("content", out object? contentObj))
-        {
-            content = contentObj?.ToString() ?? "";
-        }
-        
-        if (!string.IsNullOrEmpty(title) || !string.IsNullOrEmpty(content))
-        {
-            contextBuilder.AppendLine($"Title: {title}");
-            contextBuilder.AppendLine($"Content: {content}");
-            contextBuilder.AppendLine();
-        }
-    }
-    
-    return contextBuilder.ToString();
+    // Use the RAG plugin to retrieve documents
+    var arguments = new KernelArguments { ["query"] = userQuery };
+    var result = await kernel.InvokeAsync("RAG", "retrieve_documents", arguments);
+    return result.ToString();
 }
 
 void AddMessage(string msg) {

@@ -23,45 +23,50 @@ public class RAGPlugin
     {
         var searchOptions = new SearchOptions
         {
-            Size = 3
+            Size = 5 // Get top 5 results
         };
 
-        // Add select fields if your index has specific fields
-        searchOptions.Select.Add("content");
+        // Add select fields specific to your vector index
+        searchOptions.Select.Add("chunk");
         searchOptions.Select.Add("title");
-
+        searchOptions.Select.Add("chunk_id");
+        
         var searchResult = await _searchClient.SearchAsync<SearchDocument>(query, searchOptions);
         
         var contextBuilder = new StringBuilder();
         
         var results = searchResult.Value.GetResults();
         
+        contextBuilder.AppendLine("### Retrieved Information:");
+        
         foreach (var result in results)
         {
             var document = result.Document;
             string title = "";
-            string content = "";
+            string chunk = "";
+            string chunkId = "";
             
             if (document.TryGetValue("title", out object? titleObj))
             {
                 title = titleObj?.ToString() ?? "";
             }
             
-            if (document.TryGetValue("content", out object? contentObj))
+            if (document.TryGetValue("chunk", out object? chunkObj))
             {
-                content = contentObj?.ToString() ?? "";
+                chunk = chunkObj?.ToString() ?? "";
             }
             
-            if (!string.IsNullOrEmpty(title))
+            if (document.TryGetValue("chunk_id", out object? chunkIdObj))
             {
-                contextBuilder.AppendLine($"Title: {title}");
+                chunkId = chunkIdObj?.ToString() ?? "";
             }
             
-            if (!string.IsNullOrEmpty(content))
-            {
-                contextBuilder.AppendLine($"Content: {content}");
-            }
+            double score = result.Score ?? 0.0;
             
+            contextBuilder.AppendLine($"Document: {title}");
+            contextBuilder.AppendLine($"Passage ID: {chunkId}");
+            contextBuilder.AppendLine($"Relevance: {score:F2}");
+            contextBuilder.AppendLine($"Content: {chunk}");
             contextBuilder.AppendLine();
         }
         
