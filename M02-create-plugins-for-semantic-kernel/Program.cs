@@ -9,8 +9,29 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using System.Text;
+using System.IO;
 
-string filePath = Path.GetFullPath("../../appsettings.json");
+// More explicit navigation from the current directory
+string filePath;
+try {
+    filePath = Path.GetFullPath("../appsettings.json");
+    if (!File.Exists(filePath)) {
+        // Try alternative paths
+        string altPath = @"C:\repo5\SK_demo\MSLearn-Develop-AI-Agents-with-Azure-OpenAI-and-Semantic-Kernel-SDK\appsettings.json";
+        if (File.Exists(altPath)) {
+            filePath = altPath;
+            Console.WriteLine($"Using alternate file path: {filePath}");
+        } else {
+            Console.WriteLine($"File not found at {filePath} or {altPath}");
+            throw new FileNotFoundException("Could not find appsettings.json file");
+        }
+    }
+    Console.WriteLine($"Using config file at: {filePath}");
+} catch (Exception ex) {
+    Console.WriteLine($"Error resolving file path: {ex.Message}");
+    throw;
+}
+
 var config = new ConfigurationBuilder()
     .AddJsonFile(filePath)
     .Build();
