@@ -32,20 +32,22 @@ try {
     throw;
 }
 
-var builder = new ConfigurationBuilder()
-    .AddUserSecrets<Program>()
-    .AddJsonFile(filePath, optional: true)
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true)
     .Build();
 
 // Set your values in appsettings.json
-string modelId = builder["modelId"]!;
-string endpoint = builder["endpoint"]!;
-string apiKey = builder["apiKey"]!;
+string modelId = config["modelId"]!;
+string endpoint = config["endpoint"]!;
+string apiKey = config["apiKey"]!;
 
 // Azure AI Search configuration
-string searchEndpoint = builder["azureAISearch:endpoint"]!;
-string searchApiKey = builder["azureAISearch:apiKey"]!;
-string indexName = builder["azureAISearch:indexName"]!;
+string searchEndpoint = config["azureAISearch:endpoint"]!;
+string searchApiKey = config["azureAISearch:apiKey"]!;
+string indexName = config["azureAISearch:indexName"]!;
 
 // Create a kernel with Azure OpenAI chat completion
 var kernelBuilder = Kernel.CreateBuilder();
@@ -96,10 +98,18 @@ async Task GetReply() {
     // Retrieve context from Azure AI Search
     string retrievedContext = await RetrieveAndAugmentAsync(userQuery);
     
-    // Add a system message with the RAG context (but don't show it to the user)
+    // Add a system message with the RAG context and citation instructions
     chatHistory.Insert(chatHistory.Count - 1, new ChatMessageContent(
         AuthorRole.System,
-        $"Use the following information to help answer the user's question, but don't explicitly mention that you're using this retrieved information: {retrievedContext}"
+        @"Use the following information to help answer the user's question. 
+        When you use information from these sources, include a citation with the source number in square brackets [X].
+        If you directly quote text, follow it with a citation like: ""quote"" [X].
+        If you paraphrase information, include the citation at the end of the sentence [X].
+        Include a 'Sources:' section at the end with a list of all sources you cited.
+        If the information doesn't help to answer the question, just respond based on your knowledge.
+        
+        Retrieved Information:
+        " + retrievedContext
     ));
     
     // Get completion with the augmented context
@@ -115,24 +125,28 @@ async Task GetReply() {
     chatHistory.RemoveAt(chatHistory.Count - 3);
 }
 
-// Prompt the LLM
-chatHistory.AddSystemMessage("You are a helpful travel assistant.");
-chatHistory.AddSystemMessage("Recommend a destination to the traveler based on their background and preferences.");
+// Replace the fixed conversation with an interactive loop:
 
-// Get information about the user's plans
-AddMessage("Tell me about your travel plans.");
-GetInput();
-await GetReply();
+chatHistory = new ChatHistory();
+chatHistory.AddSystemMessage("You are a helpful Finnish immigration policy assistant. You can answer questions about Finland's immigration policies, integration programs, and requirements for immigrants.");
+chatHistory.AddSystemMessage("Always answer truthfully based on the provided information. If you're not sure about something, acknowledge that limitation.");
 
-// Offer recommendations
-AddMessage("Would you like some activity recommendations?");
-GetInput();
-await GetReply();
+AddMessage("Hello! I'm your Finnish immigration policy assistant. What would you like to know about Finland's immigration policies, requirements, or integration programs?");
 
-// Offer language tips
-AddMessage("Would you like some helpful phrases in the local language?");
-GetInput();
-await GetReply();
+bool continueChat = true;
+while (continueChat)
+{
+    GetInput();
+    await GetReply();
+    
+    Console.WriteLine("\nWould you like to ask another question? (Type 'exit' to end the conversation)");
+    string response = Console.ReadLine()?.Trim().ToLower() ?? "";
+    if (response == "exit" || response == "quit" || response == "no")
+    {
+        continueChat = false;
+        Console.WriteLine("\nThank you for using the Finnish immigration policy assistant. Goodbye!");
+    }
+}
 
 Console.WriteLine("Chat Ended.\n");
 Console.WriteLine("Chat History:");

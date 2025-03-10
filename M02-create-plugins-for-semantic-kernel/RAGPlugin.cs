@@ -4,6 +4,7 @@ using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using System.Text;
+using System.Text.Json;
 
 public class RAGPlugin
 {
@@ -34,6 +35,8 @@ public class RAGPlugin
         var searchResult = await _searchClient.SearchAsync<SearchDocument>(query, searchOptions);
         
         var contextBuilder = new StringBuilder();
+        var sources = new List<Dictionary<string, string>>();
+        int sourceIndex = 1;
         
         var results = searchResult.Value.GetResults();
         
@@ -63,12 +66,26 @@ public class RAGPlugin
             
             double score = result.Score ?? 0.0;
             
-            contextBuilder.AppendLine($"Document: {title}");
+            // Add a source reference number to the content
+            contextBuilder.AppendLine($"[{sourceIndex}] Document: {title}");
             contextBuilder.AppendLine($"Passage ID: {chunkId}");
             contextBuilder.AppendLine($"Relevance: {score:F2}");
             contextBuilder.AppendLine($"Content: {chunk}");
             contextBuilder.AppendLine();
+            
+            // Build a source dictionary for citation
+            sources.Add(new Dictionary<string, string> {
+                { "id", sourceIndex.ToString() },
+                { "title", title },
+                { "passageId", chunkId }
+            });
+            
+            sourceIndex++;
         }
+        
+        // Add the list of sources as JSON at the end for easy citation
+        contextBuilder.AppendLine("### Sources for Citation:");
+        contextBuilder.AppendLine(JsonSerializer.Serialize(sources, new JsonSerializerOptions { WriteIndented = true }));
         
         return contextBuilder.ToString();
     }
