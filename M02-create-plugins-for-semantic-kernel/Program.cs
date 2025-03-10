@@ -32,26 +32,27 @@ try {
     throw;
 }
 
-var config = new ConfigurationBuilder()
-    .AddJsonFile(filePath)
+var builder = new ConfigurationBuilder()
+    .AddUserSecrets<Program>()
+    .AddJsonFile(filePath, optional: true)
     .Build();
 
 // Set your values in appsettings.json
-string modelId = config["modelId"]!;
-string endpoint = config["endpoint"]!;
-string apiKey = config["apiKey"]!;
+string modelId = builder["modelId"]!;
+string endpoint = builder["endpoint"]!;
+string apiKey = builder["apiKey"]!;
 
 // Azure AI Search configuration
-string searchEndpoint = config["azureAISearch:endpoint"]!;
-string searchApiKey = config["azureAISearch:apiKey"]!;
-string indexName = config["azureAISearch:indexName"]!;
+string searchEndpoint = builder["azureAISearch:endpoint"]!;
+string searchApiKey = builder["azureAISearch:apiKey"]!;
+string indexName = builder["azureAISearch:indexName"]!;
 
 // Create a kernel with Azure OpenAI chat completion
-var builder = Kernel.CreateBuilder();
-builder.AddAzureOpenAIChatCompletion(modelId, endpoint, apiKey);
+var kernelBuilder = Kernel.CreateBuilder();
+kernelBuilder.AddAzureOpenAIChatCompletion(modelId, endpoint, apiKey);
 
 // Build the kernel
-Kernel kernel = builder.Build();
+Kernel kernel = kernelBuilder.Build();
 
 // Get chat completion service.
 var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
