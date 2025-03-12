@@ -179,26 +179,40 @@ try {
     chatHistory.AddSystemMessage("You are a helpful assistant. You can answer questions about stored documents.");
     chatHistory.AddSystemMessage("Always answer truthfully based on the provided information. If you're not sure about something, acknowledge that limitation.");
 
-    AddMessage("Hello! I'm your data chat assistant. What would you like to know about the documents indexed in the database?");
+    // Welcome message with instructions about quitting
+    Console.WriteLine("Hello! I'm your data chat assistant. What would you like to know about the documents indexed in the database?");
+    Console.WriteLine("(Type 'quit', 'exit', or 'bye' anytime to end the conversation)");
+
+    // Add welcome message to chat history
+    chatHistory.AddAssistantMessage("Hello! I'm your data chat assistant. What would you like to know about the documents indexed in the database?");
 
     bool continueChat = true;
     while (continueChat)
     {
         try {
-            GetInput();
-            await GetReply();
+            // Get user input
+            string userInput = Console.ReadLine()?.Trim() ?? "";
             
-            Console.WriteLine("\nWould you like to ask another question? (Type 'exit' to end the conversation)");
-            string response = Console.ReadLine()?.Trim().ToLower() ?? "";
-            if (response == "exit" || response == "quit" || response == "no")
+            // Check for exit commands
+            if (userInput.ToLower() == "quit" || userInput.ToLower() == "exit" || userInput.ToLower() == "bye")
             {
                 continueChat = false;
-                Console.WriteLine("\nThank you for using the Finnish immigration policy assistant. Goodbye!");
+                Console.WriteLine("\nThank you for using the data chat assistant. Goodbye!");
+                break;
             }
+            
+            // Add user input to chat history
+            chatHistory.AddUserMessage(userInput);
+            
+            // Get and display the AI's response
+            await GetReply();
+            
+            // Simple prompt for next question (optional, can be removed for even cleaner interface)
+            Console.WriteLine("\n> ");
         }
         catch (Exception ex) {
             Console.WriteLine($"Error in chat loop: {ex.Message}");
-            Console.WriteLine("Let's continue with a new question.");
+            Console.WriteLine("Please try asking another question.");
         }
     }
 
