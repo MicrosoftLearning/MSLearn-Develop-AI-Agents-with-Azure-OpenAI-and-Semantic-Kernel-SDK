@@ -12,21 +12,27 @@ using System.Text;
 using System.IO;
 using System.Threading;
 
-// Get the path to the existing appsettings.json using a reliable method
-string relativePath = Path.Combine("..", "appsettings.json");
-string filePath = Path.GetFullPath(relativePath);
+// Replace the current file path resolution with this:
+string filePath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
 Console.WriteLine($"Using config file at: {filePath}");
 
 try {
     if (!File.Exists(filePath)) {
         Console.WriteLine($"Warning: File not found at {filePath}");
-        throw new FileNotFoundException($"Could not find appsettings.json file at {filePath}");
+        // Try the parent directory as a fallback
+        string fallbackPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "appsettings.json");
+        fallbackPath = Path.GetFullPath(fallbackPath);
+        
+        if (File.Exists(fallbackPath)) {
+            Console.WriteLine($"Found config file at fallback location: {fallbackPath}");
+            filePath = fallbackPath;
+        } else {
+            throw new FileNotFoundException($"Could not find appsettings.json file at {filePath} or {fallbackPath}");
+        }
     }
     
     var config = new ConfigurationBuilder()
-        // Important: Use the physical path here, not the relative path
         .AddJsonFile(filePath, optional: false)
-        // Add user secrets as a fallback
         .AddUserSecrets<Program>(optional: true)
         .Build();
     
@@ -149,7 +155,7 @@ try {
             ChatMessageContent reply = await chatCompletionService.GetChatMessageContentAsync(
                 augmentedChatHistory,
                 new OpenAIPromptExecutionSettings { 
-                    MaxTokens = 1000,
+                    MaxTokens = 10000,
                     Temperature = 0.7
                 },
                 kernel: kernel
@@ -170,10 +176,10 @@ try {
     // Replace the fixed conversation with an interactive loop:
 
     chatHistory = new ChatHistory();
-    chatHistory.AddSystemMessage("You are a helpful Finnish immigration policy assistant. You can answer questions about Finland's immigration policies, integration programs, and requirements for immigrants.");
+    chatHistory.AddSystemMessage("You are a helpful assistant. You can answer questions about stored documents.");
     chatHistory.AddSystemMessage("Always answer truthfully based on the provided information. If you're not sure about something, acknowledge that limitation.");
 
-    AddMessage("Hello! I'm your Finnish immigration policy assistant. What would you like to know about Finland's immigration policies, requirements, or integration programs?");
+    AddMessage("Hello! I'm your data chat assistant. What would you like to know about the documents indexed in the database?");
 
     bool continueChat = true;
     while (continueChat)
