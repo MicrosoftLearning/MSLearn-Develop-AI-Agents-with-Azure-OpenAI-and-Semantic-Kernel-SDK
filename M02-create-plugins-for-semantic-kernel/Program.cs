@@ -39,6 +39,14 @@ try {
     string searchApiKey = config["azureAISearch:apiKey"]!;
     string indexName = config["azureAISearch:indexName"]!;
     
+    // Read max conversation turns (default to 5 if not specified)
+    int maxConversationTurns = 5;
+    if (int.TryParse(config["maxConversationTurns"], out int configuredTurns))
+    {
+        maxConversationTurns = configuredTurns;
+    }
+    Console.WriteLine($"Using maximum of {maxConversationTurns} conversation turns in history");
+    
     // Create a kernel with Azure OpenAI chat completion
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(modelId, endpoint, apiKey);
@@ -82,37 +90,70 @@ try {
     }
 
     async Task GetReply() {
-        // Get the last user message
-        string userQuery = chatHistory.Last(m => m.Role == AuthorRole.User).Content!;
-        
-        // Retrieve context from Azure AI Search
-        string retrievedContext = await RetrieveAndAugmentAsync(userQuery);
-        
-        // Add a system message with the RAG context and citation instructions
-        chatHistory.Insert(chatHistory.Count - 1, new ChatMessageContent(
-            AuthorRole.System,
-            @"Use the following information to help answer the user's question. 
-            When you use information from these sources, include a citation with the source number in square brackets [X].
-            If you directly quote text, follow it with a citation like: ""quote"" [X].
-            If you paraphrase information, include the citation at the end of the sentence [X].
-            Include a 'Sources:' section at the end with a list of all sources you cited.
-            If the information doesn't help to answer the question, just respond based on your knowledge.
+        try {
+            // Get the last user message
+            string userQuery = chatHistory.Last(m => m.Role == AuthorRole.User).Content!;
             
-            Retrieved Information:
-            " + retrievedContext
-        ));
-        
-        // Get completion with the augmented context
-        ChatMessageContent reply = await chatCompletionService.GetChatMessageContentAsync(
-            chatHistory,
-            kernel: kernel
-        );
-        
-        Console.WriteLine(reply.ToString());
-        chatHistory.AddAssistantMessage(reply.ToString());
-        
-        // Remove the RAG context message to keep the history clean for further interactions
-        chatHistory.RemoveAt(chatHistory.Count - 3);
+            Console.WriteLine("Processing your question...");
+            
+            // Retrieve context from Azure AI Search
+            string retrievedContext = await RetrieveAndAugmentAsync(userQuery);
+            
+            // Create a chat history for this request with limited conversation context
+            var augmentedChatHistory = new ChatHistory();
+            
+            // Add all system messages from the original history
+            foreach (var msg in chatHistory.Where(m => m.Role == AuthorRole.System))
+                augmentedChatHistory.Add(msg);
+            
+            // Add the RAG context as an additional system message
+            augmentedChatHistory.Add(new ChatMessageContent(
+                AuthorRole.System,
+                @"Use the following information to help answer the user's question. 
+                When you use information from these sources, include a citation with the source number in square brackets [X].
+                If you directly quote text, follow it with a citation like: ""quote"" [X].
+                If you paraphrase information, include the citation at the end of the sentence [X].
+                Include a 'Sources:' section at the end with a list of all sources you cited.
+                If the information doesn't help to answer the question, just respond based on your knowledge.
+                
+                Retrieved Information:
+                " + retrievedContext
+            ));
+            
+            // Get conversation messages, limiting to the configured number of turns
+            var conversationMessages = chatHistory
+                .Where(m => m.Role == AuthorRole.User || m.Role == AuthorRole.Assistant)
+                .ToList();
+                
+            // Calculate how many messages to include (2 messages = 1 turn: user question + assistant response)
+            int messagesToInclude = Math.Min(conversationMessages.Count, maxConversationTurns * 2);
+            
+            // Add the most recent conversation messages, starting from the appropriate index
+            for (int i = conversationMessages.Count - messagesToInclude; i < conversationMessages.Count; i++)
+            {
+                augmentedChatHistory.Add(conversationMessages[i]);
+            }
+            
+            // Get completion with the augmented context
+            ChatMessageContent reply = await chatCompletionService.GetChatMessageContentAsync(
+                augmentedChatHistory,
+                new OpenAIPromptExecutionSettings { 
+                    MaxTokens = 1000,
+                    Temperature = 0.7
+                },
+                kernel: kernel
+            );
+            
+            Console.WriteLine(reply.ToString());
+            
+            // Add the response to the main chat history
+            chatHistory.AddAssistantMessage(reply.ToString());
+        }
+        catch (Exception ex) {
+            Console.WriteLine($"Error getting reply: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            chatHistory.AddAssistantMessage("I'm sorry, I encountered an error processing your request.");
+        }
     }
 
     // Replace the fixed conversation with an interactive loop:
@@ -126,15 +167,21 @@ try {
     bool continueChat = true;
     while (continueChat)
     {
-        GetInput();
-        await GetReply();
-        
-        Console.WriteLine("\nWould you like to ask another question? (Type 'exit' to end the conversation)");
-        string response = Console.ReadLine()?.Trim().ToLower() ?? "";
-        if (response == "exit" || response == "quit" || response == "no")
-        {
-            continueChat = false;
-            Console.WriteLine("\nThank you for using the Finnish immigration policy assistant. Goodbye!");
+        try {
+            GetInput();
+            await GetReply();
+            
+            Console.WriteLine("\nWould you like to ask another question? (Type 'exit' to end the conversation)");
+            string response = Console.ReadLine()?.Trim().ToLower() ?? "";
+            if (response == "exit" || response == "quit" || response == "no")
+            {
+                continueChat = false;
+                Console.WriteLine("\nThank you for using the Finnish immigration policy assistant. Goodbye!");
+            }
+        }
+        catch (Exception ex) {
+            Console.WriteLine($"Error in chat loop: {ex.Message}");
+            Console.WriteLine("Let's continue with a new question.");
         }
     }
 
@@ -150,74 +197,4 @@ catch (Exception ex) {
     Console.WriteLine($"Error loading configuration: {ex.Message}");
     throw;
 }
-
-// Create a kernel with Azure OpenAI chat completion
-// var builder = Kernel.CreateBuilder();
-// builder.AddAzureOpenAIChatCompletion(modelId, endpoint, apiKey);
-
-// // Build the kernel
-// Kernel kernel = builder.Build();
-
-// string prompt = """
-//     <message role="system">Instructions: Identify the from and to destinations 
-//     and dates from the user's request</message>
-
-//     <message role="user">Can you give me a list of flights from Seattle to Tokyo? 
-//     I want to travel from March 11 to March 18.</message>
-
-//     <message role="assistant">
-//     Origin: Seattle
-//     Destination: Tokyo
-//     Depart: 03/11/2025 
-//     Return: 03/18/2025
-//     </message>
-
-//     <message role="user">{{input}}</message>
-//     """;
-    
-// string input = "I want to travel from June 1 to July 22. I want to go to Greece. I live in Chicago.";
-
-// // Create the kernel arguments
-// var arguments = new KernelArguments { ["input"] = input };
-
-// // Create the prompt template config using handlebars format
-// var templateFactory = new HandlebarsPromptTemplateFactory();
-// var promptTemplateConfig = new PromptTemplateConfig()
-// {
-//     Template = prompt,
-//     TemplateFormat = "handlebars",
-//     Name = "FlightPrompt",
-// };
-
-// // Invoke the prompt function
-// var function = kernel.CreateFunctionFromPrompt(promptTemplateConfig, templateFactory);
-// var response = await kernel.InvokeAsync(function, arguments);
-// Console.WriteLine(response);
-
-
-
-// Create a kernel builder with Azure OpenAI chat completion
-// var builder = Kernel.CreateBuilder();
-// builder.AddAzureOpenAIChatCompletion(modelId, endpoint, apiKey);
-
-// // Build the kernel
-// var kernel = builder.Build();
-
-
-// string prompt = """
-//     You are a helpful travel guide. 
-//     I'm visiting {{$city}}. {{$background}}. What are some activities I should do today?
-//     """;
-// string city = "Barcelona";
-// string background = "I really enjoy art and dance.";
-
-// // Create the kernel function from the prompt
-// var activitiesFunction = kernel.CreateFunctionFromPrompt(prompt);
-
-// // Create the kernel arguments
-// var arguments = new KernelArguments { ["city"] = city, ["background"] = background };
-
-// // InvokeAsync on the kernel object
-// var result = await kernel.InvokeAsync(activitiesFunction, arguments);
-// Console.WriteLine(result);
 
