@@ -10,6 +10,7 @@ using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using System.Text;
 using System.IO;
+using System.Threading;
 
 // Get the path to the existing appsettings.json using a reliable method
 string relativePath = Path.Combine("..", "appsettings.json");
@@ -94,20 +95,28 @@ try {
             // Get the last user message
             string userQuery = chatHistory.Last(m => m.Role == AuthorRole.User).Content!;
             
-            Console.WriteLine("Processing your question...");
+            Console.WriteLine("Processing your question: " + userQuery);
+            
+            // Add debugging to help track where the issue is occurring
+            Console.WriteLine("Retrieving documents...");
             
             // Retrieve context from Azure AI Search
             string retrievedContext = await RetrieveAndAugmentAsync(userQuery);
             
-            // Create a chat history for this request with limited conversation context
+            Console.WriteLine("Documents retrieved successfully. Building augmented history...");
+            
+            // Create a fresh chat history for this request
             var augmentedChatHistory = new ChatHistory();
             
-            // Add all system messages from the original history
+            // Step 1: Add all SYSTEM messages from the original history 
             foreach (var msg in chatHistory.Where(m => m.Role == AuthorRole.System))
+            {
                 augmentedChatHistory.Add(msg);
+                Console.WriteLine($"Added system message to augmented history: {msg.Content!.Substring(0, Math.Min(30, msg.Content!.Length))}...");
+            }
             
-            // Add the RAG context as an additional system message
-            augmentedChatHistory.Add(new ChatMessageContent(
+            // Step 2: Add the RAG context as a SYSTEM message
+            var contextMessage = new ChatMessageContent(
                 AuthorRole.System,
                 @"Use the following information to help answer the user's question. 
                 When you use information from these sources, include a citation with the source number in square brackets [X].
@@ -118,9 +127,11 @@ try {
                 
                 Retrieved Information:
                 " + retrievedContext
-            ));
+            );
+            augmentedChatHistory.Add(contextMessage);
+            Console.WriteLine("Added RAG context as system message");
             
-            // Get conversation messages, limiting to the configured number of turns
+            // Step 3: Add conversation history (limited by maxConversationTurns)
             var conversationMessages = chatHistory
                 .Where(m => m.Role == AuthorRole.User || m.Role == AuthorRole.Assistant)
                 .ToList();
