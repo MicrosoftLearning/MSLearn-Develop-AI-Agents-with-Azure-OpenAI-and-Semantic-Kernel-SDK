@@ -3,7 +3,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
-string filePath = Path.GetFullPath("../../appsettings.json");
+string filePath = Path.GetFullPath("../appsettings.json");
 var config = new ConfigurationBuilder()
     .AddJsonFile(filePath)
     .Build();
